@@ -27,6 +27,10 @@ export const createApp = (config: Pick<AppConfig, "uploadSecret" | "uploadTempDi
     response.json({ ok: true });
   });
 
+  app.get("/health", (_request, response) => {
+    response.json({ ok: true });
+  });
+
   app.get("/upload", (request, response) => {
     const token = tokenFromRequest(request);
 
