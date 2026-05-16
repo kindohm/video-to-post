@@ -22,12 +22,6 @@ type CloudflareUploadResponse = {
   };
 };
 
-type CloudflareEmbedResponse = {
-  success: boolean;
-  errors?: { message: string }[];
-  result?: string;
-};
-
 const cloudflareJson = async <T>(response: Response): Promise<T> => {
   const body = (await response.json()) as T;
 
@@ -39,6 +33,16 @@ const cloudflareJson = async <T>(response: Response): Promise<T> => {
 };
 
 const cloudflareError = (errors?: { message: string }[]) => errors?.map((error) => error.message).join("; ") ?? "unknown error";
+
+const cloudflareEmbedHtml = async (response: Response) => {
+  const body = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`Cloudflare Stream embed lookup failed: ${response.status} ${body}`);
+  }
+
+  return body;
+};
 
 export const createCloudflareStreamClient = (config: CloudflareStreamConfig): CloudflareStreamClient => ({
   uploadVideo: async (video) => {
@@ -59,16 +63,12 @@ export const createCloudflareStreamClient = (config: CloudflareStreamConfig): Cl
       throw new Error(`Cloudflare Stream upload failed: ${cloudflareError(upload.errors)}`);
     }
 
-    const embed = await cloudflareJson<CloudflareEmbedResponse>(
+    const embedHtml = await cloudflareEmbedHtml(
       await fetch(`https://api.cloudflare.com/client/v4/accounts/${config.accountId}/stream/${uid}/embed`, {
         headers: { authorization: `Bearer ${config.apiToken}` },
       }),
     );
 
-    if (!embed.success || !embed.result) {
-      throw new Error(`Cloudflare Stream embed lookup failed: ${cloudflareError(embed.errors)}`);
-    }
-
-    return { uid, embedHtml: embed.result };
+    return { uid, embedHtml };
   },
 });
