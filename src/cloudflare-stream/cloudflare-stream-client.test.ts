@@ -6,7 +6,7 @@ describe("createCloudflareStreamClient", () => {
     vi.unstubAllGlobals();
   });
 
-  it("reads Cloudflare embed response as html instead of json", async () => {
+  it("generates dashboard-style iframe embed html from video thumbnail details", async () => {
     const fetch = vi
       .fn()
       .mockResolvedValueOnce(
@@ -15,7 +15,14 @@ describe("createCloudflareStreamClient", () => {
           result: { uid: "stream-123" },
         }),
       )
-      .mockResolvedValueOnce(new Response('<stream src="stream-123"></stream>', { status: 200 }));
+      .mockResolvedValueOnce(
+        Response.json({
+          success: true,
+          result: {
+            thumbnail: "https://customer-code.cloudflarestream.com/stream-123/thumbnails/thumbnail.jpg?time=&height=600",
+          },
+        }),
+      );
 
     vi.stubGlobal("fetch", fetch);
 
@@ -30,7 +37,15 @@ describe("createCloudflareStreamClient", () => {
       }),
     ).resolves.toEqual({
       uid: "stream-123",
-      embedHtml: '<stream src="stream-123"></stream>',
+      embedHtml: `<div style="position: relative; padding-top: 56.25%;">
+  <iframe
+    src="https://customer-code.cloudflarestream.com/stream-123/iframe?poster=https%3A%2F%2Fcustomer-code.cloudflarestream.com%2Fstream-123%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600"
+    loading="lazy"
+    style="border: none; position: absolute; top: 0; left: 0; height: 100%; width: 100%;"
+    allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+    allowfullscreen="true"
+  ></iframe>
+</div>`,
     });
   });
 });

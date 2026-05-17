@@ -22,6 +22,14 @@ type CloudflareUploadResponse = {
   };
 };
 
+type CloudflareVideoDetailsResponse = {
+  success: boolean;
+  errors?: { message: string }[];
+  result?: {
+    thumbnail?: string;
+  };
+};
+
 const cloudflareJson = async <T>(response: Response): Promise<T> => {
   const body = (await response.json()) as T;
 
@@ -34,14 +42,20 @@ const cloudflareJson = async <T>(response: Response): Promise<T> => {
 
 const cloudflareError = (errors?: { message: string }[]) => errors?.map((error) => error.message).join("; ") ?? "unknown error";
 
-const cloudflareEmbedHtml = async (response: Response) => {
-  const body = await response.text();
+const createIframeEmbedHtml = (input: { uid: string; thumbnailUrl: string }) => {
+  const thumbnail = new URL(input.thumbnailUrl);
+  const iframeUrl = new URL(`${thumbnail.origin}/${input.uid}/iframe`);
+  iframeUrl.searchParams.set("poster", input.thumbnailUrl);
 
-  if (!response.ok) {
-    throw new Error(`Cloudflare Stream embed lookup failed: ${response.status} ${body}`);
-  }
-
-  return body;
+  return `<div style="position: relative; padding-top: 56.25%;">
+  <iframe
+    src="${iframeUrl.toString()}"
+    loading="lazy"
+    style="border: none; position: absolute; top: 0; left: 0; height: 100%; width: 100%;"
+    allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+    allowfullscreen="true"
+  ></iframe>
+</div>`;
 };
 
 export const createCloudflareStreamClient = (config: CloudflareStreamConfig): CloudflareStreamClient => ({
@@ -63,12 +77,16 @@ export const createCloudflareStreamClient = (config: CloudflareStreamConfig): Cl
       throw new Error(`Cloudflare Stream upload failed: ${cloudflareError(upload.errors)}`);
     }
 
-    const embedHtml = await cloudflareEmbedHtml(
-      await fetch(`https://api.cloudflare.com/client/v4/accounts/${config.accountId}/stream/${uid}/embed`, {
+    const details = await cloudflareJson<CloudflareVideoDetailsResponse>(
+      await fetch(`https://api.cloudflare.com/client/v4/accounts/${config.accountId}/stream/${uid}`, {
         headers: { authorization: `Bearer ${config.apiToken}` },
       }),
     );
 
-    return { uid, embedHtml };
+    if (!details.success || !details.result?.thumbnail) {
+      throw new Error(`Cloudflare Stream video details lookup failed: ${cloudflareError(details.errors)}`);
+    }
+
+    return { uid, embedHtml: createIframeEmbedHtml({ uid, thumbnailUrl: details.result.thumbnail }) };
   },
 });
