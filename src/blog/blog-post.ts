@@ -24,7 +24,7 @@ export const createBlogPost = (input: { video: UploadedVideo; streamVideo: Strea
   const slug = slugify(title);
 
   return {
-    path: `posts/${date}/${slug}/index.njk`,
+    path: `posts/${date}-${slug}/index.md`,
     title,
     body: `---
 title: "${title.replace(/"/g, '\\"')}"

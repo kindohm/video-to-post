@@ -1,6 +1,6 @@
 # Setup
 
-This app receives an MP4 upload from Android, uploads it to Cloudflare Stream, writes `posts/<YYYY-MM-DD>/<video-title>/index.njk` in your blog repo, commits, and pushes.
+This app receives an MP4 upload from Android, uploads it to Cloudflare Stream, writes `posts/<YYYY-MM-DD>-<video-title>/index.md` in your blog repo, commits, and pushes.
 
 ## Local prerequisites
 

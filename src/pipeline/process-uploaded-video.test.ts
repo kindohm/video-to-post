@@ -25,11 +25,11 @@ describe("processUploadedVideo", () => {
     ).resolves.toEqual({
       status: "processed",
       uploadId: "upload-123",
-      postPath: "posts/2026-05-16/pocket-field-note/index.njk",
+      postPath: "posts/2026-05-16-pocket-field-note/index.md",
       streamUid: "stream-123",
     });
 
     expect(stream.uploadVideo).toHaveBeenCalledWith(expect.objectContaining({ id: "upload-123" }));
-    expect(blog.publishPost).toHaveBeenCalledWith(expect.objectContaining({ path: "posts/2026-05-16/pocket-field-note/index.njk" }));
+    expect(blog.publishPost).toHaveBeenCalledWith(expect.objectContaining({ path: "posts/2026-05-16-pocket-field-note/index.md" }));
   });
 });

@@ -19,7 +19,7 @@ describe("createBlogPost", () => {
       authorName: "Video Bot",
     });
 
-    expect(post.path).toBe("posts/2026-05-16/my-great-video/index.njk");
+    expect(post.path).toBe("posts/2026-05-16-my-great-video/index.md");
     expect(post.body).toContain('title: "My Great Video"');
     expect(post.body).toContain('sourceUploadId: "upload-123"');
     expect(post.body).toContain('cloudflareStreamUid: "stream-123"');
